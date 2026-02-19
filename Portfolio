@@ -1,0 +1,63 @@
+// Portfolio.java
+import java.util.HashMap;
+import java.util.Map;
+
+public class Portfolio {
+    private double cash;
+    private final Map<Stock, Integer> holdings;
+
+    public Portfolio(double initialCash) {
+        this.cash = initialCash;
+        this.holdings = new HashMap<>();
+    }
+
+    // Get current cash balance
+    public double getCash() {
+        return cash;
+    }
+
+    // Get the map of owned stocks and quantities
+    public Map<Stock, Integer> getHoldings() {
+        return holdings;
+    }
+
+    // Buy a specific quantity of a stock
+    public boolean buyStock(Stock stock, int quantity) {
+        if(quantity <= 0) return false;
+
+        double totalCost = stock.getPrice() * quantity;
+        if(totalCost > cash) return false; // not enough cash
+
+        cash -= totalCost;
+        holdings.put(stock, holdings.getOrDefault(stock, 0) + quantity);
+        return true;
+    }
+
+    // Sell a specific quantity of a stock
+    public boolean sellStock(Stock stock, int quantity) {
+        if(quantity <= 0) return false;
+
+        int owned = holdings.getOrDefault(stock, 0);
+        if(quantity > owned) return false; // can't sell more than owned
+
+        cash += stock.getPrice() * quantity;
+        if(quantity == owned) holdings.remove(stock);
+        else holdings.put(stock, owned - quantity);
+
+        return true;
+    }
+
+    // Get total portfolio value (cash + current value of owned stocks)
+    public double getTotalValue() {
+        double total = cash;
+        for(Map.Entry<Stock, Integer> entry : holdings.entrySet()) {
+            total += entry.getKey().getPrice() * entry.getValue();
+        }
+        return total;
+    }
+
+    // Get number of shares owned for a specific stock
+    public int getSharesOwned(Stock stock) {
+        return holdings.getOrDefault(stock, 0);
+    }
+}

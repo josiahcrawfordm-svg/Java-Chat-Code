@@ -1,49 +1,40 @@
 // StockTableModel.java
-import javax.swing.table.AbstractTableModel;
-import java.util.List;
-
+import javax.swing.table.*;
+import java.util.*;
 public class StockTableModel extends AbstractTableModel {
-    private final String[] columns = {"Company", "Symbol", "Price", "Change%"};
+    private final String[] columns = {"Company","Symbol","Price","Change%","Pinned"};
     private final List<Stock> stocks;
-
-    public StockTableModel(List<Stock> stocks) {
-        this.stocks = stocks;
-    }
+    public StockTableModel(List<Stock> stocks) { this.stocks=stocks; }
 
     @Override
-    public int getRowCount() {
-        return stocks.size();
-    }
-
+    public int getRowCount() { return stocks.size(); }
     @Override
-    public int getColumnCount() {
-        return columns.length;
-    }
-
+    public int getColumnCount() { return columns.length; }
     @Override
-    public Object getValueAt(int rowIndex, int columnIndex) {
-        Stock s = stocks.get(rowIndex);
-        switch(columnIndex) {
+    public Object getValueAt(int r,int c) {
+        Stock s = stocks.get(r);
+        switch(c) {
             case 0: return s.getName();
             case 1: return s.getSymbol();
             case 2: return String.format("$%.2f", s.getPrice());
             case 3: 
                 double change = s.getPercentChange();
-                return String.format("%.2f%% %s", Math.abs(change), change >= 0 ? "↑" : "↓");
+                return String.format("%.2f%% %s", Math.abs(change), change>=0?"↑":"↓");
+            case 4: return s.isPinned()?"★":"";
             default: return "";
         }
     }
 
     @Override
-    public String getColumnName(int column) {
-        return columns[column];
-    }
+    public String getColumnName(int c) { return columns[c]; }
 
-    public Stock getStockAt(int row) {
-        return stocks.get(row);
-    }
+    public Stock getStockAt(int row) { return stocks.get(row); }
+    public void refresh() { fireTableDataChanged(); }
 
-    public void refresh() {
+    public void sortByChange() {
+        stocks.sort((a,b)->Double.compare(b.getPercentChange(),a.getPercentChange()));
+        // pinned stocks stay on top
+        stocks.sort((a,b)->b.isPinned()?1:(a.isPinned()?-1:0));
         fireTableDataChanged();
     }
 }

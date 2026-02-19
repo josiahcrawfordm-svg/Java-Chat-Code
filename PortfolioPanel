@@ -1,24 +1,22 @@
 // PortfolioPanel.java
 import javax.swing.*;
 import java.awt.*;
-
 public class PortfolioPanel extends JPanel {
     private final Portfolio portfolio;
     private final JLabel cashLabel;
     private final JLabel totalLabel;
 
-    public PortfolioPanel(Portfolio portfolio) {
-        this.portfolio = portfolio;
+    public PortfolioPanel(Portfolio portfolio){
+        this.portfolio=portfolio;
         setLayout(new FlowLayout());
-        cashLabel = new JLabel();
-        totalLabel = new JLabel();
-        add(cashLabel);
-        add(totalLabel);
+        cashLabel=new JLabel();
+        totalLabel=new JLabel();
+        add(cashLabel); add(totalLabel);
         refresh();
     }
 
-    public void refresh() {
-        cashLabel.setText("Cash: $" + String.format("%.2f", portfolio.getCash()));
-        totalLabel.setText("Total Portfolio Value: $" + String.format("%.2f", portfolio.getTotalValue()));
+    public void refresh(){
+        cashLabel.setText("Cash: $"+String.format("%.2f",portfolio.getCash()));
+        totalLabel.setText("Total Value: $"+String.format("%.2f",portfolio.getTotalValue()));
     }
 }

@@ -1,0 +1,49 @@
+// StockTableModel.java
+import javax.swing.table.AbstractTableModel;
+import java.util.List;
+
+public class StockTableModel extends AbstractTableModel {
+    private final String[] columns = {"Company", "Symbol", "Price", "Change%"};
+    private final List<Stock> stocks;
+
+    public StockTableModel(List<Stock> stocks) {
+        this.stocks = stocks;
+    }
+
+    @Override
+    public int getRowCount() {
+        return stocks.size();
+    }
+
+    @Override
+    public int getColumnCount() {
+        return columns.length;
+    }
+
+    @Override
+    public Object getValueAt(int rowIndex, int columnIndex) {
+        Stock s = stocks.get(rowIndex);
+        switch(columnIndex) {
+            case 0: return s.getName();
+            case 1: return s.getSymbol();
+            case 2: return String.format("$%.2f", s.getPrice());
+            case 3: 
+                double change = s.getPercentChange();
+                return String.format("%.2f%% %s", Math.abs(change), change >= 0 ? "↑" : "↓");
+            default: return "";
+        }
+    }
+
+    @Override
+    public String getColumnName(int column) {
+        return columns[column];
+    }
+
+    public Stock getStockAt(int row) {
+        return stocks.get(row);
+    }
+
+    public void refresh() {
+        fireTableDataChanged();
+    }
+}

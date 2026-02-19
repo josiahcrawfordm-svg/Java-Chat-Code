@@ -1,54 +1,48 @@
 // PortfolioGUI.java
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+import javax.swing.event.*;
 import java.awt.*;
-
-public class PortfolioGUI extends JFrame implements Market.MarketListener {
+import java.util.*;
+public class PortfolioGUI extends JFrame implements Market.MarketListener{
     private final Portfolio portfolio;
     private final Market market;
     private final PortfolioPanel portfolioPanel;
-    private final JTable stockTable;
+    private final PortfolioGraphPanel graphPanel;
     private final StockTableModel tableModel;
+    private final JTable stockTable;
     private StockDetailPanel detailPanel;
+    private final SummaryPanel summaryPanel;
 
-    public PortfolioGUI(Portfolio portfolio, Market market) {
-        this.portfolio = portfolio;
-        this.market = market;
-        market.addListener(this);
+    public PortfolioGUI(Portfolio p, Market m){
+        this.portfolio=p; this.market=m; market.addListener(this);
+        setTitle("Trader Simulator"); setSize(1200,800); setLayout(new BorderLayout()); setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-        setTitle("Interactive Stock Dashboard");
-        setSize(1200, 800);
-        setLayout(new BorderLayout());
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        portfolioPanel=new PortfolioPanel(portfolio);
+        add(portfolioPanel,BorderLayout.NORTH);
 
-        // Portfolio panel
-        portfolioPanel = new PortfolioPanel(portfolio);
-        add(portfolioPanel, BorderLayout.NORTH);
+        graphPanel=new PortfolioGraphPanel(portfolio);
+        add(graphPanel,BorderLayout.EAST);
 
-        // Stock table
-        tableModel = new StockTableModel(market.getStocks());
-        stockTable = new JTable(tableModel);
-        stockTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        JScrollPane tableScroll = new JScrollPane(stockTable);
-        tableScroll.setPreferredSize(new Dimension(400,600));
-        add(tableScroll, BorderLayout.WEST);
+        summaryPanel=new SummaryPanel(portfolio);
+        add(summaryPanel,BorderLayout.SOUTH);
 
-        // Detail panel placeholder
-        detailPanel = new StockDetailPanel(market.getStocks().get(0), portfolio);
-        add(detailPanel, BorderLayout.CENTER);
+        tableModel=new StockTableModel(market.getStocks());
+        stockTable=new JTable(tableModel); stockTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane tableScroll=new JScrollPane(stockTable); tableScroll.setPreferredSize(new Dimension(400,600));
+        add(tableScroll,BorderLayout.WEST);
 
-        // Table row selection listener
-        stockTable.getSelectionModel().addListSelectionListener(e -> {
-            if(!e.getValueIsAdjusting()) {
-                int row = stockTable.getSelectedRow();
-                if(row >= 0) {
-                    Stock selected = tableModel.getStockAt(row);
+        detailPanel=new StockDetailPanel(market.getStocks().get(0),portfolio);
+        add(detailPanel,BorderLayout.CENTER);
+
+        stockTable.getSelectionModel().addListSelectionListener(e->{
+            if(!e.getValueIsAdjusting()){
+                int row=stockTable.getSelectedRow();
+                if(row>=0){
+                    Stock s=tableModel.getStockAt(row);
                     remove(detailPanel);
-                    detailPanel = new StockDetailPanel(selected, portfolio);
-                    add(detailPanel, BorderLayout.CENTER);
-                    revalidate();
-                    repaint();
+                    detailPanel=new StockDetailPanel(s,portfolio);
+                    add(detailPanel,BorderLayout.CENTER);
+                    revalidate(); repaint();
                 }
             }
         });
@@ -57,11 +51,14 @@ public class PortfolioGUI extends JFrame implements Market.MarketListener {
     }
 
     @Override
-    public void onPriceUpdate(Stock stock) {
-        SwingUtilities.invokeLater(() -> {
+    public void onPriceUpdate(Stock stock){
+        SwingUtilities.invokeLater(()->{
             tableModel.refresh();
             detailPanel.refresh();
             portfolioPanel.refresh();
+            graphPanel.updateHistory();
+            summaryPanel.refresh();
         });
     }
 }
+

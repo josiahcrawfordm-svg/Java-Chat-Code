@@ -1,0 +1,39 @@
+// StockChartPanel.java
+import javax.swing.*;
+import java.awt.*;
+import java.util.List;
+
+public class StockChartPanel extends JPanel {
+    private final Stock stock;
+
+    public StockChartPanel(Stock stock) {
+        this.stock = stock;
+        setPreferredSize(new Dimension(500,200));
+        setBorder(BorderFactory.createTitledBorder(stock.getSymbol()));
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        List<Double> history = stock.getPriceHistory();
+        if(history.size() < 2) return;
+
+        int w = getWidth();
+        int h = getHeight();
+
+        double max = history.stream().max(Double::compare).orElse(1.0);
+        double min = history.stream().min(Double::compare).orElse(0.0);
+        double range = max - min;
+
+        int points = history.size();
+        for(int i=1;i<points;i++) {
+            int x1 = (i-1) * w / points;
+            int x2 = i * w / points;
+            int y1 = h - (int)((history.get(i-1) - min)/range * h);
+            int y2 = h - (int)((history.get(i) - min)/range * h);
+
+            g.setColor(history.get(i) >= history.get(i-1) ? Color.GREEN : Color.RED);
+            g.drawLine(x1,y1,x2,y2);
+        }
+    }
+}

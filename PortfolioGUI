@@ -1,0 +1,67 @@
+// PortfolioGUI.java
+import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import java.awt.*;
+
+public class PortfolioGUI extends JFrame implements Market.MarketListener {
+    private final Portfolio portfolio;
+    private final Market market;
+    private final PortfolioPanel portfolioPanel;
+    private final JTable stockTable;
+    private final StockTableModel tableModel;
+    private StockDetailPanel detailPanel;
+
+    public PortfolioGUI(Portfolio portfolio, Market market) {
+        this.portfolio = portfolio;
+        this.market = market;
+        market.addListener(this);
+
+        setTitle("Interactive Stock Dashboard");
+        setSize(1200, 800);
+        setLayout(new BorderLayout());
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+        // Portfolio panel
+        portfolioPanel = new PortfolioPanel(portfolio);
+        add(portfolioPanel, BorderLayout.NORTH);
+
+        // Stock table
+        tableModel = new StockTableModel(market.getStocks());
+        stockTable = new JTable(tableModel);
+        stockTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane tableScroll = new JScrollPane(stockTable);
+        tableScroll.setPreferredSize(new Dimension(400,600));
+        add(tableScroll, BorderLayout.WEST);
+
+        // Detail panel placeholder
+        detailPanel = new StockDetailPanel(market.getStocks().get(0), portfolio);
+        add(detailPanel, BorderLayout.CENTER);
+
+        // Table row selection listener
+        stockTable.getSelectionModel().addListSelectionListener(e -> {
+            if(!e.getValueIsAdjusting()) {
+                int row = stockTable.getSelectedRow();
+                if(row >= 0) {
+                    Stock selected = tableModel.getStockAt(row);
+                    remove(detailPanel);
+                    detailPanel = new StockDetailPanel(selected, portfolio);
+                    add(detailPanel, BorderLayout.CENTER);
+                    revalidate();
+                    repaint();
+                }
+            }
+        });
+
+        setVisible(true);
+    }
+
+    @Override
+    public void onPriceUpdate(Stock stock) {
+        SwingUtilities.invokeLater(() -> {
+            tableModel.refresh();
+            detailPanel.refresh();
+            portfolioPanel.refresh();
+        });
+    }
+}

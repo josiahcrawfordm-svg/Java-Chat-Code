@@ -1,7 +1,6 @@
 // StockDetailPanel.java
 import javax.swing.*;
 import java.awt.*;
-
 public class StockDetailPanel extends JPanel {
     private final Stock stock;
     private final Portfolio portfolio;
@@ -9,77 +8,66 @@ public class StockDetailPanel extends JPanel {
     private final StockChartPanel chartPanel;
 
     public StockDetailPanel(Stock stock, Portfolio portfolio) {
-        this.stock = stock;
-        this.portfolio = portfolio;
+        this.stock=stock;
+        this.portfolio=portfolio;
         setLayout(new BorderLayout());
-        chartPanel = new StockChartPanel(stock);
-        add(chartPanel, BorderLayout.CENTER);
+        chartPanel=new StockChartPanel(stock);
+        add(chartPanel,BorderLayout.CENTER);
 
-        JPanel top = new JPanel();
-        ownedLabel = new JLabel("Owned: " + portfolio.getSharesOwned(stock));
-        top.add(new JLabel("Price: $" + String.format("%.2f", stock.getPrice())));
+        JPanel top=new JPanel();
+        ownedLabel=new JLabel("Owned: "+portfolio.getSharesOwned(stock));
+        top.add(new JLabel("Price: $"+String.format("%.2f",stock.getPrice())));
         top.add(ownedLabel);
-        add(top, BorderLayout.NORTH);
+        add(top,BorderLayout.NORTH);
 
-        JPanel btnPanel = new JPanel();
-        int[] amounts = {1,5,10,50,100};
-        for(int amt : amounts) {
-            JButton b = new JButton("Buy " + amt);
-            b.addActionListener(e -> buyStock(amt));
-            btnPanel.add(b);
+        JPanel btns=new JPanel();
+        int[] amounts={1,5,10,50,100};
+        for(int amt:amounts) {
+            JButton b=new JButton("Buy "+amt);
+            b.addActionListener(e->buyStock(amt));
+            btns.add(b);
         }
-        JButton buyAll = new JButton("Buy All");
-        buyAll.addActionListener(e -> buyAll());
-        btnPanel.add(buyAll);
+        JButton buyAll=new JButton("Buy All");
+        buyAll.addActionListener(e->buyAll());
+        btns.add(buyAll);
 
-        JButton sellBtn = new JButton("Sell");
-        sellBtn.addActionListener(e -> sellStock());
-        btnPanel.add(sellBtn);
+        JButton sellBtn=new JButton("Sell");
+        sellBtn.addActionListener(e->sellStock());
+        btns.add(sellBtn);
 
-        add(btnPanel, BorderLayout.SOUTH);
+        JButton pinBtn=new JButton("Pin/Unpin");
+        pinBtn.addActionListener(e->togglePin());
+        btns.add(pinBtn);
+
+        JButton targetBtn=new JButton("Set Target");
+        targetBtn.addActionListener(e->setTarget());
+        btns.add(targetBtn);
+
+        add(btns,BorderLayout.SOUTH);
     }
 
-    private void buyStock(int qty) {
-        int maxAffordable = (int)(portfolio.getCash() / stock.getPrice());
-        if(maxAffordable < qty) {
-            JOptionPane.showMessageDialog(this, "Not enough cash! Max: " + maxAffordable);
-            return;
-        }
-        portfolio.buyStock(stock, qty);
-        refresh();
+    private void buyStock(int qty){
+        int max=(int)(portfolio.getCash()/stock.getPrice());
+        if(max<qty) { JOptionPane.showMessageDialog(this,"Not enough cash! Max: "+max); return;}
+        portfolio.buyStock(stock,qty); refresh();
     }
-
-    private void buyAll() {
-        int maxAffordable = (int)(portfolio.getCash() / stock.getPrice());
-        if(maxAffordable == 0) {
-            JOptionPane.showMessageDialog(this, "Not enough cash!");
-            return;
-        }
-        portfolio.buyStock(stock, maxAffordable);
-        refresh();
+    private void buyAll(){ int max=(int)(portfolio.getCash()/stock.getPrice());
+        if(max==0){ JOptionPane.showMessageDialog(this,"Not enough cash!"); return;}
+        portfolio.buyStock(stock,max); refresh();
     }
-
-    private void sellStock() {
-        int owned = portfolio.getSharesOwned(stock);
-        if(owned == 0) {
-            JOptionPane.showMessageDialog(this,"You don't own any shares!");
-            return;
-        }
-        String input = JOptionPane.showInputDialog("You own " + owned + ". How many to sell? (or 'all')");
-        if(input == null) return;
+    private void sellStock(){ int owned=portfolio.getSharesOwned(stock);
+        if(owned==0){ JOptionPane.showMessageDialog(this,"You don't own shares!"); return;}
+        String in=JOptionPane.showInputDialog("You own "+owned+". How many to sell? (or 'all')");
+        if(in==null) return;
         int qty;
-        if(input.equalsIgnoreCase("all")) qty = owned;
-        else {
-            try { qty = Integer.parseInt(input); }
-            catch(Exception e) { JOptionPane.showMessageDialog(this,"Invalid number"); return; }
-            if(qty > owned) { JOptionPane.showMessageDialog(this,"You only own " + owned); return; }
-        }
-        portfolio.sellStock(stock, qty);
-        refresh();
+        if(in.equalsIgnoreCase("all")) qty=owned;
+        else { try{ qty=Integer.parseInt(in);} catch(Exception e){JOptionPane.showMessageDialog(this,"Invalid"); return;}
+            if(qty>owned){ JOptionPane.showMessageDialog(this,"You only own "+owned); return;} }
+        portfolio.sellStock(stock,qty); refresh();
     }
+    private void togglePin(){ stock.setPinned(!stock.isPinned()); refresh();}
+    private void setTarget(){ String in=JOptionPane.showInputDialog("Set price target"); if(in==null) return;
+        try{ stock.setPriceTarget(Double.parseDouble(in)); } catch(Exception e){ JOptionPane.showMessageDialog(this,"Invalid"); } refresh(); }
 
-    public void refresh() {
-        ownedLabel.setText("Owned: " + portfolio.getSharesOwned(stock));
-        chartPanel.repaint();
-    }
+    public void refresh(){ ownedLabel.setText("Owned: "+portfolio.getSharesOwned(stock)); chartPanel.repaint();}
 }

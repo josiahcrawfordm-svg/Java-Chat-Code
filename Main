@@ -1,33 +1,36 @@
 // Main.java
 import javax.swing.*;
-import java.util.Random;
+import java.util.*;
+public class Main{
+    public static void main(String[] args){
+        Portfolio portfolio=new Portfolio(5000);
+        Market market=new Market();
+        Random rand=new Random();
 
-public class Main {
-    public static void main(String[] args) {
-        Portfolio portfolio = new Portfolio(5000);
-        Market market = new Market();
-        Random rand = new Random();
-
-        // 25 stocks, mostly 10-200, one at 400
-        String[] symbols = {"AAPL","MSFT","GOOG","TSLA","AMZN","NFLX","NVDA","BABA","DIS","INTC",
-                            "ORCL","ADBE","CRM","PYPL","UBER","LYFT","SQ","SHOP","TWTR","META",
-                            "SNAP","ZM","DOCU","SPOT","F"};
-        String[] names = {"Apple Inc.","Microsoft Corp.","Alphabet Inc.","Tesla Inc.","Amazon.com Inc.",
-                          "Netflix Inc.","NVIDIA Corp.","Alibaba Group","Disney","Intel",
-                          "Oracle","Adobe","Salesforce","PayPal","Uber","Lyft","Square","Shopify",
-                          "Twitter","Meta Platforms","Snap","Zoom","DocuSign","Spotify","Ford"};
-        double[] prices = new double[symbols.length];
-        for(int i=0;i<symbols.length;i++) {
-            if(i==3) prices[i] = 400; // one stock at 400
-            else prices[i] = 10 + rand.nextDouble()*190; // 10-200
+        String[] symbols={"AAPL","MSFT","GOOG","TSLA","AMZN","NFLX","NVDA","BABA","DIS","INTC",
+                          "ORCL","ADBE","CRM","PYPL","UBER","LYFT","SQ","SHOP","TWTR","META",
+                          "SNAP","ZM","DOCU","SPOT","F"};
+        String[] names={"Apple","Microsoft","Alphabet","Tesla","Amazon","Netflix","NVIDIA","Alibaba","Disney","Intel",
+                        "Oracle","Adobe","Salesforce","PayPal","Uber","Lyft","Square","Shopify","Twitter","Meta",
+                        "Snap","Zoom","DocuSign","Spotify","Ford"};
+        double[] prices=new double[symbols.length];
+        for(int i=0;i<symbols.length;i++){
+            if(i==3) prices[i]=400; else prices[i]=10+rand.nextDouble()*190;
         }
+        for(int i=0;i<symbols.length;i++) market.addStock(new Stock(names[i],symbols[i],prices[i]));
 
-        for(int i=0;i<symbols.length;i++) {
-            market.addStock(new Stock(names[i], symbols[i], prices[i]));
-        }
-
-        SwingUtilities.invokeLater(() -> new PortfolioGUI(portfolio, market));
-
+        SwingUtilities.invokeLater(()->new PortfolioGUI(portfolio,market));
         market.start();
+
+        // Dev-only auto-refresh: adjust tick speed (hidden)
+        boolean dev=true;
+        if(dev){
+            new Thread(()->{
+                while(true){
+                    try{ Thread.sleep(60*1000); } catch(Exception e){}
+                    for(Stock s:market.getStocks()) s.updatePrice();
+                }
+            }).start();
+        }
     }
 }

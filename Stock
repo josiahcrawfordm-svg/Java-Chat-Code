@@ -1,0 +1,58 @@
+// Stock.java
+import java.util.*;
+public class Stock {
+    private final String name;
+    private final String symbol;
+    private double price;
+    private double lastPrice;
+    private final List<Double> priceHistory;
+    private final Random rand = new Random();
+    private boolean pinned = false;
+    private Double priceTarget = null;
+
+    public Stock(String name, String symbol, double price) {
+        this.name = name;
+        this.symbol = symbol;
+        this.price = price;
+        this.lastPrice = price;
+        this.priceHistory = new ArrayList<>();
+        this.priceHistory.add(price);
+    }
+
+    public String getName() { return name; }
+    public String getSymbol() { return symbol; }
+    public double getPrice() { return price; }
+    public double getLastPrice() { return lastPrice; }
+    public List<Double> getPriceHistory() { return new ArrayList<>(priceHistory); }
+
+    public void setPinned(boolean pinned) { this.pinned = pinned; }
+    public boolean isPinned() { return pinned; }
+
+    public void setPriceTarget(Double target) { this.priceTarget = target; }
+    public Double getPriceTarget() { return priceTarget; }
+
+    public void updatePrice() {
+        lastPrice = price;
+        double changePercent = (rand.nextDouble() - 0.5) * 0.2; 
+        price *= (1 + changePercent);
+        if(price < 0.1) price = 0.1;
+        price = Math.round(price*100.0)/100.0;
+
+        int intermediatePoints = 4 + rand.nextInt(3);
+        for(int i=0;i<intermediatePoints;i++) {
+            double jitter = price*((rand.nextDouble()-0.5)*0.02);
+            priceHistory.add(price+jitter);
+        }
+        priceHistory.add(price);
+
+        while(priceHistory.size() > 50) priceHistory.remove(0);
+    }
+
+    public double getPercentChange() { return ((price-lastPrice)/lastPrice)*100; }
+
+    @Override
+    public String toString() {
+        String arrow = getPercentChange()>=0?"↑":"↓";
+        return symbol + ": $" + String.format("%.2f", price) + " " + arrow + " (" + String.format("%.2f",getPercentChange())+"%)";
+    }
+}

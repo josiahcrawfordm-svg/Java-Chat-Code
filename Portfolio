@@ -1,63 +1,64 @@
 // Portfolio.java
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.io.*;
 
-public class Portfolio {
+public class Portfolio implements Serializable {
     private double cash;
     private final Map<Stock, Integer> holdings;
+    private final List<String> tradeHistory;
 
     public Portfolio(double initialCash) {
         this.cash = initialCash;
-        this.holdings = new HashMap<>();
+        this.holdings = new LinkedHashMap<>();
+        this.tradeHistory = new ArrayList<>();
     }
 
-    // Get current cash balance
-    public double getCash() {
-        return cash;
-    }
+    public double getCash() { return cash; }
+    public Map<Stock, Integer> getHoldings() { return holdings; }
+    public List<String> getTradeHistory() { return tradeHistory; }
 
-    // Get the map of owned stocks and quantities
-    public Map<Stock, Integer> getHoldings() {
-        return holdings;
-    }
-
-    // Buy a specific quantity of a stock
     public boolean buyStock(Stock stock, int quantity) {
-        if(quantity <= 0) return false;
-
+        if (quantity <= 0) return false;
         double totalCost = stock.getPrice() * quantity;
-        if(totalCost > cash) return false; // not enough cash
-
+        if (totalCost > cash) return false;
         cash -= totalCost;
         holdings.put(stock, holdings.getOrDefault(stock, 0) + quantity);
+        tradeHistory.add(String.format("BUY %d %s at $%.2f", quantity, stock.getSymbol(), stock.getPrice()));
         return true;
     }
 
-    // Sell a specific quantity of a stock
     public boolean sellStock(Stock stock, int quantity) {
-        if(quantity <= 0) return false;
-
+        if (quantity <= 0) return false;
         int owned = holdings.getOrDefault(stock, 0);
-        if(quantity > owned) return false; // can't sell more than owned
-
+        if (quantity > owned) return false;
         cash += stock.getPrice() * quantity;
-        if(quantity == owned) holdings.remove(stock);
+        if (quantity == owned) holdings.remove(stock);
         else holdings.put(stock, owned - quantity);
-
+        tradeHistory.add(String.format("SELL %d %s at $%.2f", quantity, stock.getSymbol(), stock.getPrice()));
         return true;
     }
 
-    // Get total portfolio value (cash + current value of owned stocks)
     public double getTotalValue() {
         double total = cash;
-        for(Map.Entry<Stock, Integer> entry : holdings.entrySet()) {
-            total += entry.getKey().getPrice() * entry.getValue();
+        for (Map.Entry<Stock,Integer> e : holdings.entrySet()) {
+            total += e.getKey().getPrice() * e.getValue();
         }
         return total;
     }
 
-    // Get number of shares owned for a specific stock
     public int getSharesOwned(Stock stock) {
         return holdings.getOrDefault(stock, 0);
+    }
+
+    // Save/load portfolio
+    public void saveToFile(String filename) {
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(filename))) {
+            out.writeObject(this);
+        } catch(Exception e) { e.printStackTrace(); }
+    }
+    public static Portfolio loadFromFile(String filename) {
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(filename))) {
+            return (Portfolio) in.readObject();
+        } catch(Exception e) { e.printStackTrace(); return null; }
     }
 }
